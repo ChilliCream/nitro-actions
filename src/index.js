@@ -121,7 +121,8 @@ async function runNitroFusionPublish() {
     // Optional inputs
     const cloudUrl = core.getInput('cloud-url') || 'api.chillicream.com';
     const workingDirectory = core.getInput('working-directory') || '.';
-    const sourceSchemaFile = core.getInput('source-schema-file');
+    const singleSchemaFile = core.getInput('source-schema-file');
+    const multipleSchemaFiles = core.getInput('source-schema-files');
     
     // Change to working directory
     if (workingDirectory !== '.') {
@@ -139,9 +140,19 @@ async function runNitroFusionPublish() {
       '--cloud-url', cloudUrl
     ];
     
-    // Add optional source schema file
-    if (sourceSchemaFile) {
-      args.push('--source-schema-file', sourceSchemaFile);
+    // Handle schema files - prioritize multiple files if provided
+    if (multipleSchemaFiles) {
+      const files = multipleSchemaFiles.split('\n')
+        .map(f => f.trim())
+        .filter(f => f.length > 0);
+      
+      core.info(`📋 Adding ${files.length} schema files`);
+      files.forEach(file => {
+        args.push('--source-schema-file', file);
+      });
+    } else if (singleSchemaFile) {
+      core.info(`📋 Adding single schema file: ${singleSchemaFile}`);
+      args.push('--source-schema-file', singleSchemaFile);
     }
     
     core.info('🚀 Publishing GraphQL schema...');

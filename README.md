@@ -32,6 +32,7 @@ Publishes GraphQL schemas using ChilliCream's Nitro CLI `fusion publish` command
 | `cloud-url` | The URL of the API | `api.chillicream.com` |
 | `working-directory` | Working directory for the command | `.` |
 | `source-schema-file` | Path to source schema file (`.graphqls`) | |
+| `source-schema-file` | Path to multiple source schema files (`.graphqls`) | |
 | `nitro-version` | Specific version of Nitro to use | `latest` |
 
 ## Outputs
@@ -77,6 +78,23 @@ jobs:
     api-id: 'my-api'
     api-key: ${{ secrets.NITRO_API_KEY }}
     source-schema-file: 'schemas/my-schema.graphqls'
+    working-directory: './backend'
+```
+
+### With Multiple Custom Schema Files
+
+```yaml
+- name: Publish Schema
+  uses: ChilliCream/nitro-fusion-publish-action@v1
+  with:
+    tag: 'v2.1.0'
+    stage: 'staging'
+    api-id: 'my-api'
+    api-key: ${{ secrets.NITRO_API_KEY }}
+    source-schema-files: |
+      a.graphqls
+      b.graphqls
+      schemas/c.graphqls
     working-directory: './backend'
 ```
 

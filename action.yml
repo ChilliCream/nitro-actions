@@ -27,7 +27,10 @@ inputs:
     default: '.'
     required: false
   source-schema-file:
-    description: 'Path to source schema file (.graphqls)'
+    description: 'Path to source schema file (.graphqls) - for single file'
+    required: false
+  source-schema-files:
+    description: 'Paths to source schema files (.graphqls), one per line - for multiple files'
     required: false
   nitro-version:
     description: 'Specific version of Nitro to use (defaults to latest)'
@@ -42,4 +45,3 @@ outputs:
 runs:
   using: 'node20'
   main: 'dist/index.js'
-  
