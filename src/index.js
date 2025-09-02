@@ -165,22 +165,8 @@ async function runNitroFusionPublish() {
     };
     
     // Execute the command
-    let output = '';
-    let errorOutput = '';
-    
-    const options = {
-      env,
-      listeners: {
-        stdout: (data) => {
-          output += data.toString();
-          core.info(data.toString().trim());
-        },
-        stderr: (data) => {
-          errorOutput += data.toString();
-          core.warning(data.toString().trim());
-        }
-      }
-    };
+    let output = '';    
+    const options = { env };
     
     const exitCode = await exec.exec('nitro', args, options);
     
