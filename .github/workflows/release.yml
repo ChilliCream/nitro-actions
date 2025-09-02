@@ -3,6 +3,7 @@ name: 🧪 Test Action
 on:
   push:
     branches: [main]
+    tags: ['v*']  # Added tag trigger
   pull_request:
     branches: [main]
     
@@ -72,17 +73,24 @@ jobs:
           api-key: 'test-key'
         continue-on-error: true
 
-  create-tags:
-    name: 🏷️ Create/Update Tags
+  create-release:
+    name: 🚀 Create Release
     runs-on: ubuntu-latest
     needs: [test-fusion-publish, test-action-dry-run]
-    if: github.ref == 'refs/heads/main'
+    if: startsWith(github.ref, 'refs/tags/v')  # Only run on version tags
     
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: 🏷️ Get tag name
+        id: get-tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Tag: $TAG"
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -94,19 +102,54 @@ jobs:
           npm ci
           npm run build
 
-      - name: 📋 Commit built files
+      - name: 📋 Commit built files to tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f dist/
-          git diff --staged --quiet || git commit -m "🔨 Update built action"
-
-      - name: 🏷️ Create/update version tags
-        run: |
-          git tag -fa v1 -m "Update v1 tag"
-          git push origin v1 --force
-          
-          if ! git rev-parse v1.0 >/dev/null 2>&1; then
-            git tag v1.0 -m "Create v1.0 tag"
-            git push origin v1.0
+          if ! git diff --staged --quiet; then
+            git commit -m "🔨 Add built files for ${{ steps.get-tag.outputs.tag }}"
+            # Update the tag to point to this new commit
+            git tag -fa ${{ steps.get-tag.outputs.tag }} -m "Release ${{ steps.get-tag.outputs.tag }}"
+            git push origin ${{ steps.get-tag.outputs.tag }} --force
           fi
+
+      - name: 📝 Generate release notes
+        id: generate-notes
+        run: |
+          # Generate release notes (customize as needed)
+          cat << EOF > release_notes.md
+          ## What's Changed
+          
+          Release ${{ steps.get-tag.outputs.tag }} of the Nitro Fusion Publish Action.
+          
+          ## Usage
+          
+          \`\`\`yaml
+          - uses: ChilliCream/nitro-fusion-publish-action@${{ steps.get-tag.outputs.tag }}
+            with:
+              tag: 'v1.0.0'
+              stage: 'production'
+              api-id: 'my-api'
+              api-key: \${{ secrets.NITRO_API_KEY }}
+          \`\`\`
+          
+          ## Supported Platforms
+          - ✅ Linux (x64, ARM64)
+          - ✅ macOS (x64, Apple Silicon)  
+          - ✅ Windows (x64)
+          
+          **Full Changelog**: https://github.com/ChilliCream/nitro-fusion-publish-action/commits/${{ steps.get-tag.outputs.tag }}
+          EOF
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get-tag.outputs.tag }}
+          name: ${{ steps.get-tag.outputs.tag }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.get-tag.outputs.tag, '-') }}  # Mark as prerelease if tag contains - (e.g., v1.0.0-beta)
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
