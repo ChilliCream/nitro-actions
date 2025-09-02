@@ -1,14 +1,12 @@
-# ChilliCream Nitro Actions 🚀
+# Nitro Fusion Publish Action
 
-A collection of GitHub Actions for ChilliCream's Nitro CLI and GraphQL platform tools.
+Publishes GraphQL schemas using ChilliCream's Nitro CLI `fusion publish` command.
 
-## Available Actions
-
-### 📤 [fusion-publish](./fusion-publish)
-Publishes GraphQL schemas using `nitro fusion publish`
+## Usage
 
 ```yaml
-- uses: ChilliCream/nitro-actions/fusion-publish@v1
+- name: Publish GraphQL Schema
+  uses: ChilliCream/nitro-fusion-publish-action@v1
   with:
     tag: 'v1.0.0'
     stage: 'production'
@@ -16,58 +14,140 @@ Publishes GraphQL schemas using `nitro fusion publish`
     api-key: ${{ secrets.NITRO_API_KEY }}
 ```
 
-## Quick Start
+## Inputs
 
-1. **Add to your workflow:**
-   ```yaml
-   name: Deploy Schema
-   on:
-     push:
-       tags: ['v*']
-   
-   jobs:
-     deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-         
-         - name: Publish GraphQL Schema
-           uses: ChilliCream/nitro-actions/fusion-publish@v1
-           with:
-             tag: ${{ github.ref_name }}
-             stage: 'production'
-             api-id: 'my-api'
-             api-key: ${{ secrets.NITRO_API_KEY }}
-   ```
+### Required
 
-2. **Set up secrets:**
-   - Go to repository Settings → Secrets and variables → Actions
-   - Add `NITRO_API_KEY` with your ChilliCream API key
+| Name | Description |
+|------|-------------|
+| `tag` | The tag of the schema version to deploy |
+| `stage` | The name of the stage (e.g., `production`, `staging`) |
+| `api-id` | The ID of the API |
+| `api-key` | API key for authentication ⚠️ Use secrets! |
 
-## Features
+### Optional
 
-✅ **Cross-platform** - Works on Linux, macOS, and Windows runners  
-✅ **Automatic Nitro installation** - Downloads and caches the right version  
-✅ **Secure** - API keys handled as environment variables  
-✅ **Smart caching** - Reuses Nitro installations across jobs  
+| Name | Description | Default |
+|------|-------------|---------|
+| `cloud-url` | The URL of the API | `api.chillicream.com` |
+| `working-directory` | Working directory for the command | `.` |
+| `source-schema-file` | Path to source schema file (`.graphqls`) | |
+| `nitro-version` | Specific version of Nitro to use | `latest` |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| `success` | Whether the publish was successful (`true`/`false`) |
+| `schema-id` | The ID of the published schema (if returned by Nitro) |
+
+## Examples
+
+### Basic Usage
+
+```yaml
+name: Deploy Schema
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Publish to Production
+        uses: ChilliCream/nitro-fusion-publish-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          stage: 'production'
+          api-id: 'my-api'
+          api-key: ${{ secrets.NITRO_API_KEY }}
+```
+
+### With Custom Schema File
+
+```yaml
+- name: Publish Schema
+  uses: ChilliCream/nitro-fusion-publish-action@v1
+  with:
+    tag: 'v2.1.0'
+    stage: 'staging'
+    api-id: 'my-api'
+    api-key: ${{ secrets.NITRO_API_KEY }}
+    source-schema-file: 'schemas/my-schema.graphqls'
+    working-directory: './backend'
+```
+
+### Multi-Stage Deployment
+
+```yaml
+name: Deploy Schema to Multiple Stages
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Schema version tag'
+        required: true
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Staging
+        uses: ChilliCream/nitro-fusion-publish-action@v1
+        with:
+          tag: ${{ github.event.inputs.tag }}
+          stage: 'staging'
+          api-id: 'my-api'
+          api-key: ${{ secrets.NITRO_API_KEY }}
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Production
+        uses: ChilliCream/nitro-fusion-publish-action@v1
+        with:
+          tag: ${{ github.event.inputs.tag }}
+          stage: 'production'
+          api-id: 'my-api'
+          api-key: ${{ secrets.NITRO_API_KEY }}
+```
+
+### Using Outputs
+
+```yaml
+- name: Publish Schema
+  id: publish
+  uses: ChilliCream/nitro-fusion-publish-action@v1
+  with:
+    tag: 'v1.0.0'
+    stage: 'production'
+    api-id: 'my-api'
+    api-key: ${{ secrets.NITRO_API_KEY }}
+
+- name: Check Result
+  run: |
+    echo "Success: ${{ steps.publish.outputs.success }}"
+    echo "Schema ID: ${{ steps.publish.outputs.schema-id }}"
+```
 
 ## Supported Platforms
 
-- 🐧 **Linux** (x64, ARM64)
-- 🍎 **macOS** (Intel, Apple Silicon)
-- 🪟 **Windows** (x64)
-
-## Installation
-
-No installation required! Just reference the actions in your workflows:
-
-```yaml
-uses: ChilliCream/nitro-actions/[action-name]@v1
-```
+- ✅ Linux (x64, ARM64)
+- ✅ macOS (x64, Apple Silicon)  
+- ✅ Windows (x64)
 
 ## Security
 
-🔒 **Always use GitHub secrets for API keys:**
+⚠️ **Never hardcode your API key!** Always use GitHub secrets:
 
 ```yaml
 # ✅ Good
@@ -76,16 +156,6 @@ api-key: ${{ secrets.NITRO_API_KEY }}
 # ❌ Never do this
 api-key: 'my-secret-key'
 ```
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-## Support
-
-- 📖 [Documentation](https://chillicream.com/docs)
-- 💬 [Discord Community](https://discord.gg/TnNK7Mw)
-- 🐛 [Report Issues](https://github.com/ChilliCream/nitro-actions/issues)
 
 ## License
 

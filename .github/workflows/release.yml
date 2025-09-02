@@ -1,4 +1,4 @@
-name: 🧪 Test Actions
+name: 🧪 Test Action
 
 on:
   push:
@@ -26,18 +26,14 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'fusion-publish/package.json'
 
       - name: 📦 Install dependencies
-        working-directory: fusion-publish
         run: npm ci
 
       - name: 🔨 Build action
-        working-directory: fusion-publish
         run: npm run build
 
       - name: ✅ Check built action
-        working-directory: fusion-publish
         run: |
           if [ -f "dist/index.js" ]; then
             echo "✅ Built action found"
@@ -61,18 +57,14 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'fusion-publish/package.json'
 
       - name: 📦 Build action
-        working-directory: fusion-publish
         run: |
           npm ci
           npm run build
 
-      # This tests that the action loads and validates inputs correctly
-      # It will fail at the actual Nitro command (which is expected)
       - name: 🎯 Test Action Setup
-        uses: ./fusion-publish
+        uses: ./
         with:
           tag: 'test-v1.0.0'
           stage: 'testing'
@@ -97,26 +89,23 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 🔨 Build all actions
+      - name: 🔨 Build action
         run: |
-          cd fusion-publish
           npm ci
           npm run build
-          cd ..
 
       - name: 📋 Commit built files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f fusion-publish/dist/
-          git diff --staged --quiet || git commit -m "🔨 Update built actions"
+          git add -f dist/
+          git diff --staged --quiet || git commit -m "🔨 Update built action"
 
       - name: 🏷️ Create/update version tags
         run: |
           git tag -fa v1 -m "Update v1 tag"
           git push origin v1 --force
           
-          # Create v1.0 tag if it doesn't exist
           if ! git rev-parse v1.0 >/dev/null 2>&1; then
             git tag v1.0 -m "Create v1.0 tag"
             git push origin v1.0
