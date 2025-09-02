@@ -1,0 +1,45 @@
+name: 'Nitro Fusion Publish'
+description: 'Publishes GraphQL schemas using ChilliCream Nitro CLI'
+author: 'ChilliCream'
+branding:
+  icon: 'upload-cloud'
+  color: 'purple'
+
+inputs:
+  tag:
+    description: 'The tag of the schema version to deploy'
+    required: true
+  stage:
+    description: 'The name of the stage'
+    required: true
+  api-id:
+    description: 'The ID of the API'
+    required: true
+  api-key:
+    description: 'API key for authentication'
+    required: true
+  cloud-url:
+    description: 'The URL of the API'
+    default: 'api.chillicream.com'
+    required: false
+  working-directory:
+    description: 'Working directory for the command'
+    default: '.'
+    required: false
+  source-schema-file:
+    description: 'Path to source schema file (.graphqls)'
+    required: false
+  nitro-version:
+    description: 'Specific version of Nitro to use (defaults to latest)'
+    required: false
+
+outputs:
+  success:
+    description: 'Whether the publish was successful'
+  schema-id:
+    description: 'The ID of the published schema (if returned by Nitro)'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+  
