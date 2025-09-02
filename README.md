@@ -32,7 +32,7 @@ Publishes GraphQL schemas using ChilliCream's Nitro CLI `fusion publish` command
 | `cloud-url` | The URL of the API | `api.chillicream.com` |
 | `working-directory` | Working directory for the command | `.` |
 | `source-schema-file` | Path to source schema file (`.graphqls`) | |
-| `source-schema-file` | Path to multiple source schema files (`.graphqls`) | |
+| `source-schema-files` | Path to multiple source schema files (`.graphqls`) | |
 | `nitro-version` | Specific version of Nitro to use | `latest` |
 
 ## Outputs
